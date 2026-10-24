@@ -93,10 +93,44 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
     }
   }
 
+  /// Color-coding for categories
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Clothes':
+        return const Color(0xFF5E35B1); // Indigo
+      case 'Books':
+        return const Color(0xFF1E88E5); // Royal Blue
+      case 'Toys':
+        return const Color(0xFFE65100); // Warm Orange
+      case 'Household Items':
+        return const Color(0xFF00897B); // Teal
+      case 'Food':
+        return const Color(0xFF2E7D32); // Forest Green
+      default:
+        return const Color(0xFF546E7A); // Slate Grey
+    }
+  }
+
+  /// Color-coding for conditions
+  Color _getConditionColor(String condition) {
+    switch (condition) {
+      case 'New':
+        return const Color(0xFF2E7D32); // Green
+      case 'Good':
+        return const Color(0xFF1565C0); // Blue
+      case 'Usable':
+        return const Color(0xFFD35400); // Amber
+      default:
+        return const Color(0xFF546E7A);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
     final isDonated = item.isDonated;
+    final categoryColor = _getCategoryColor(item.category);
+    final conditionColor = _getConditionColor(item.condition);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9F6),
@@ -135,7 +169,7 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(18),
                   border: Border.all(
-                    color: isDonated ? Colors.grey.shade300 : const Color(0xFF2E7D32).withOpacity(0.2),
+                    color: isDonated ? Colors.grey.shade300 : categoryColor.withOpacity(0.25),
                     width: 1.2,
                   ),
                   boxShadow: [
@@ -157,8 +191,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE8F5E9),
+                            color: categoryColor.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: categoryColor.withOpacity(0.25)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -166,15 +201,15 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                               Icon(
                                 _getCategoryIcon(item.category),
                                 size: 16,
-                                color: const Color(0xFF1B5E20),
+                                color: categoryColor,
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 item.category,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
-                                  color: Color(0xFF1B5E20),
+                                  color: categoryColor,
                                 ),
                               ),
                             ],
@@ -284,9 +319,9 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFF8E7),
+                              color: conditionColor.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFD35400).withOpacity(0.2)),
+                              border: Border.all(color: conditionColor.withOpacity(0.25)),
                             ),
                             child: Column(
                               children: [
@@ -298,14 +333,14 @@ class _ItemDetailsScreenState extends State<ItemDetailsScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    const Icon(Icons.verified_outlined, size: 18, color: Color(0xFFD35400)),
+                                    Icon(Icons.verified_outlined, size: 18, color: conditionColor),
                                     const SizedBox(width: 4),
                                     Text(
                                       item.condition,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.bold,
-                                        color: Color(0xFFD35400),
+                                        color: conditionColor,
                                       ),
                                     ),
                                   ],

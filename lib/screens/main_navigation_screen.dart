@@ -66,6 +66,75 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     });
   }
 
+  /// Resets items to default sample data
+  void _resetToSampleData() {
+    setState(() {
+      _items = DonationItem.getSampleItems();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Sample items restored successfully.'),
+        backgroundColor: const Color(0xFF1B5E20),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
+  }
+
+  /// Clears all items from the list with a confirmation dialog
+  void _clearAllItems() {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red.shade600, size: 26),
+              const SizedBox(width: 10),
+              const Text('Clear All Items?'),
+            ],
+          ),
+          content: const Text(
+            'Are you sure you want to delete all items? This will empty the donation list for demo testing.',
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Cancel',
+                style: TextStyle(color: Colors.grey.shade700, fontWeight: FontWeight.w600),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                setState(() {
+                  _items.clear();
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Text('All donation items have been cleared.'),
+                    backgroundColor: Colors.red.shade700,
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                );
+              },
+              child: const Text('Clear All'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // --- Screen Navigation Methods ---
 
   /// Navigates to the Add Donation Screen
@@ -159,6 +228,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onEditItem: _openEditScreen,
         onToggleStatus: _toggleDonatedStatus,
         onDeleteItem: _deleteItem,
+        onResetSampleData: _resetToSampleData,
+        onClearAllItems: _clearAllItems,
       ),
     ];
 

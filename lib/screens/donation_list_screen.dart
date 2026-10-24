@@ -13,6 +13,8 @@ class DonationListScreen extends StatefulWidget {
   final Function(DonationItem) onEditItem;
   final Function(int) onToggleStatus;
   final Function(int) onDeleteItem;
+  final VoidCallback onResetSampleData;
+  final VoidCallback onClearAllItems;
 
   const DonationListScreen({
     super.key,
@@ -22,6 +24,8 @@ class DonationListScreen extends StatefulWidget {
     required this.onEditItem,
     required this.onToggleStatus,
     required this.onDeleteItem,
+    required this.onResetSampleData,
+    required this.onClearAllItems,
   });
 
   @override
@@ -30,6 +34,8 @@ class DonationListScreen extends StatefulWidget {
 
 class _DonationListScreenState extends State<DonationListScreen> {
   String _selectedCategory = 'All';
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
 
   final List<String> _filterCategories = [
     'All',
@@ -40,6 +46,12 @@ class _DonationListScreenState extends State<DonationListScreen> {
     'Food',
     'Other',
   ];
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   /// Confirmation dialog before deleting an item
   void _confirmDelete(BuildContext context, DonationItem item) {
@@ -95,10 +107,14 @@ class _DonationListScreenState extends State<DonationListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Apply category filtering
-    final filteredItems = _selectedCategory == 'All'
-        ? widget.items
-        : widget.items.where((item) => item.category == _selectedCategory).toList();
+    // Apply both category filtering and real-time search query filtering
+    final filteredItems = widget.items.where((item) {
+      final matchesCategory = _selectedCategory == 'All' || item.category == _selectedCategory;
+      final matchesSearch = _searchQuery.isEmpty ||
+          item.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          item.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    }).toList();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9F6),
@@ -116,10 +132,86 @@ class _DonationListScreenState extends State<DonationListScreen> {
             tooltip: 'Add Donation',
             onPressed: widget.onNavigateToAdd,
           ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert_rounded),
+            tooltip: 'Demo Options',
+            onSelected: (value) {
+              if (value == 'reset') {
+                widget.onResetSampleData();
+              } else if (value == 'clear') {
+                widget.onClearAllItems();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'reset',
+                child: Row(
+                  children: [
+                    Icon(Icons.refresh_rounded, color: Color(0xFF1B5E20), size: 20),
+                    SizedBox(width: 10),
+                    Text('Restore Sample Items'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'clear',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_sweep_outlined, color: Colors.red, size: 20),
+                    SizedBox(width: 10),
+                    Text('Clear All Items'),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ],
       ),
       body: Column(
         children: [
+          // Real-Time Search Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim();
+                });
+              },
+              decoration: InputDecoration(
+                hintText: 'Search items by name or description...',
+                hintStyle: TextStyle(fontSize: 13.5, color: Colors.grey.shade500),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF1B5E20)),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear_rounded, size: 18, color: Colors.grey),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() {
+                            _searchQuery = '';
+                          });
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.grey.shade300, width: 1.2),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Color(0xFF1B5E20), width: 1.2),
+                ),
+              ),
+            ),
+          ),
           // Category Filter Chip Bar
           Container(
             color: Colors.white,
@@ -234,9 +326,11 @@ class _DonationListScreenState extends State<DonationListScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            _selectedCategory == 'All'
-                                ? 'No donation items found'
-                                : 'No items found in "$_selectedCategory"',
+                            _searchQuery.isNotEmpty
+                                ? 'No results for "$_searchQuery"'
+                                : (_selectedCategory == 'All'
+                                    ? 'No donation items found'
+                                    : 'No items in "$_selectedCategory"'),
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
@@ -246,9 +340,11 @@ class _DonationListScreenState extends State<DonationListScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            _selectedCategory == 'All'
-                                ? 'Tap "+ Add Item" to list your first donation item for community reuse.'
-                                : 'Try selecting another category or add a new donation in this category.',
+                            _searchQuery.isNotEmpty
+                                ? 'Check your spelling or try clearing the search bar.'
+                                : (_selectedCategory == 'All'
+                                    ? 'Tap "+ Add Item" to list your first donation item for community reuse.'
+                                    : 'Try selecting another category or add a new donation in this category.'),
                             style: TextStyle(
                               fontSize: 13,
                               color: Colors.grey.shade600,
@@ -256,19 +352,39 @@ class _DonationListScreenState extends State<DonationListScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            onPressed: widget.onNavigateToAdd,
-                            icon: const Icon(Icons.add_rounded),
-                            label: const Text('Add Donation'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1B5E20),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
+                          if (_searchQuery.isNotEmpty)
+                            OutlinedButton.icon(
+                              onPressed: () {
+                                _searchController.clear();
+                                setState(() {
+                                  _searchQuery = '';
+                                });
+                              },
+                              icon: const Icon(Icons.clear_rounded, size: 18),
+                              label: const Text('Clear Search'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF1B5E20),
+                                side: const BorderSide(color: Color(0xFF1B5E20)),
+                                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            )
+                          else
+                            ElevatedButton.icon(
+                              onPressed: widget.onNavigateToAdd,
+                              icon: const Icon(Icons.add_rounded),
+                              label: const Text('Add Donation'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1B5E20),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
                               ),
                             ),
-                          ),
                         ],
                       ),
                     ),

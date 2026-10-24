@@ -41,9 +41,43 @@ class DonationItemCard extends StatelessWidget {
     }
   }
 
+  /// Color-coding for each category to enhance visual aesthetics
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'Clothes':
+        return const Color(0xFF5E35B1); // Indigo
+      case 'Books':
+        return const Color(0xFF1E88E5); // Royal Blue
+      case 'Toys':
+        return const Color(0xFFE65100); // Warm Orange
+      case 'Household Items':
+        return const Color(0xFF00897B); // Teal
+      case 'Food':
+        return const Color(0xFF2E7D32); // Forest Green
+      default:
+        return const Color(0xFF546E7A); // Slate Grey
+    }
+  }
+
+  /// Color-coding for condition badges
+  Color _getConditionColor(String condition) {
+    switch (condition) {
+      case 'New':
+        return const Color(0xFF2E7D32); // Green
+      case 'Good':
+        return const Color(0xFF1565C0); // Blue
+      case 'Usable':
+        return const Color(0xFFD35400); // Amber
+      default:
+        return const Color(0xFF546E7A);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final bool isDonated = item.isDonated;
+    final categoryColor = _getCategoryColor(item.category);
+    final conditionColor = _getConditionColor(item.condition);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
@@ -51,7 +85,7 @@ class DonationItemCard extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
         side: BorderSide(
-          color: isDonated ? Colors.grey.shade300 : const Color(0xFF2E7D32).withOpacity(0.2),
+          color: isDonated ? Colors.grey.shade300 : categoryColor.withOpacity(0.25),
           width: 1,
         ),
       ),
@@ -73,12 +107,12 @@ class DonationItemCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isDonated
                           ? Colors.grey.shade200
-                          : const Color(0xFF2E7D32).withOpacity(0.12),
+                          : categoryColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Icon(
                       _getCategoryIcon(item.category),
-                      color: isDonated ? Colors.grey.shade600 : const Color(0xFF1B5E20),
+                      color: isDonated ? Colors.grey.shade600 : categoryColor,
                       size: 20,
                     ),
                   ),
@@ -103,8 +137,8 @@ class DonationItemCard extends StatelessWidget {
                           item.category,
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey.shade600,
-                            fontWeight: FontWeight.w500,
+                            color: isDonated ? Colors.grey.shade600 : categoryColor,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
@@ -200,20 +234,21 @@ class DonationItemCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF3E0),
+                      color: conditionColor.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: conditionColor.withOpacity(0.3)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.verified_outlined, size: 13, color: Color(0xFFD35400)),
+                        Icon(Icons.verified_outlined, size: 13, color: conditionColor),
                         const SizedBox(width: 3),
                         Text(
                           item.condition,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFFD35400),
+                            color: conditionColor,
                           ),
                         ),
                       ],
